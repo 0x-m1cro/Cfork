@@ -6,7 +6,7 @@ WORKDIR /app
 # Copy package files
 COPY package*.json ./
 
-# Install dependencies
+# Install all dependencies (including devDependencies for build)
 RUN npm ci
 
 # Copy source code
@@ -26,13 +26,15 @@ ENV NODE_ENV=production
 # Copy package files
 COPY --from=builder /app/package*.json ./
 
-# Copy built application
+# Install only production dependencies
+RUN npm ci --omit=dev
+
+# Copy built application and necessary files
 COPY --from=builder /app/.next ./.next
-COPY --from=builder /app/public ./public
 COPY --from=builder /app/next.config.js ./
 
-# Install only production dependencies
-RUN npm ci --only=production
+# Create public directory if needed (Next.js might need it)
+RUN mkdir -p public
 
 # Expose port
 EXPOSE 3000
